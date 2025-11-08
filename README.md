@@ -3,7 +3,7 @@
 Go client for the Hevy app API.
 
 This library is not officially affiliated with Hevy. Use at your own risk.
-[Hevy API Documentation](https://hevyapp.com/api).
+[Hevy API Documentation](https://api.hevyapp.com/docs).
 
 ## API key
 
