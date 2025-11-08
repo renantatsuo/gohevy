@@ -1,102 +1,23 @@
 package hevy
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"context"
 	"net/http"
 )
 
 // CreateWebhookSubscription creates a new webhook subscription
-func (c *Client) CreateWebhookSubscription(subscription WebhookSubscription) (*WebhookSubscription, error) {
-	url := fmt.Sprintf("%s/webhook-subscription", c.baseURL)
-	
-	body, err := json.Marshal(subscription)
-	if err != nil {
-		return nil, err
-	}
-	
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to create webhook subscription: %s", resp.Status)
-	}
-
-	var result WebhookSubscription
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+func (c *Client) CreateWebhookSubscription(ctx context.Context, subscription WebhookSubscription) (res *WebhookSubscription, err error) {
+	err = c.request(ctx, http.MethodPost, "/webhook-subscription", subscription, &res)
+	return
 }
 
 // GetWebhookSubscription retrieves the current webhook subscription
-func (c *Client) GetWebhookSubscription() (*WebhookSubscription, error) {
-	url := fmt.Sprintf("%s/webhook-subscription", c.baseURL)
-	
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get webhook subscription: %s", resp.Status)
-	}
-
-	var result WebhookSubscription
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+func (c *Client) GetWebhookSubscription(ctx context.Context) (res *WebhookSubscription, err error) {
+	err = c.request(ctx, http.MethodGet, "/webhook-subscription", nil, &res)
+	return
 }
 
 // DeleteWebhookSubscription deletes the webhook subscription
-func (c *Client) DeleteWebhookSubscription() error {
-	url := fmt.Sprintf("%s/webhook-subscription", c.baseURL)
-	
-	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		return err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("failed to delete webhook subscription: %s", resp.Status)
-	}
-
-	return nil
+func (c *Client) DeleteWebhookSubscription(ctx context.Context) error {
+	return c.request(ctx, http.MethodDelete, "/webhook-subscription", nil, nil)
 }
-

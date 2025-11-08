@@ -14,7 +14,7 @@ type Routine struct {
 type RoutineExercise struct {
 	Index              int          `json:"index"`
 	Title              string       `json:"title"`
-	RestSeconds        string       `json:"rest_seconds"`
+	RestSeconds        int          `json:"rest_seconds"` // Duration in seconds
 	Notes              string       `json:"notes"`
 	ExerciseTemplateID string       `json:"exercise_template_id"`
 	SupersetsID        int          `json:"supersets_id"`
@@ -151,4 +151,9 @@ type ExerciseHistoryEntry struct {
 	WorkoutID   string    `json:"workout_id"`
 	WorkoutDate time.Time `json:"workout_date"`
 	Sets        []Set     `json:"sets"`
+}
+
+type WorkoutEventsParams struct {
+	PaginationParams
+	Since time.Time `json:"since"`
 }

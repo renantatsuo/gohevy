@@ -1,145 +1,43 @@
 package hevy
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 // GetRoutines retrieves a paginated list of routines
-func (c *Client) GetRoutines(params PaginationParams) (*PaginatedRoutinesResponse, error) {
-	url := fmt.Sprintf("%s/routines?page=%d&pageSize=%d", c.baseURL, params.Page, params.PageSize)
-	
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (c *Client) GetRoutines(ctx context.Context, params PaginationParams) (res *PaginatedRoutinesResponse, err error) {
+	urlParams := url.Values{}
+	urlParams.Add("page", strconv.Itoa(params.Page))
+	urlParams.Add("pageSize", strconv.Itoa(params.PageSize))
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get routines: %s", resp.Status)
-	}
+	path := fmt.Sprintf("/routines?%s", urlParams.Encode())
 
-	var result PaginatedRoutinesResponse
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+	err = c.request(ctx, http.MethodGet, path, nil, &res)
+	return
 }
 
 // GetRoutine retrieves a single routine by ID
-func (c *Client) GetRoutine(routineID string) (*Routine, error) {
-	url := fmt.Sprintf("%s/routines/%s", c.baseURL, routineID)
-	
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (c *Client) GetRoutine(ctx context.Context, routineID string) (res *Routine, err error) {
+	path := fmt.Sprintf("/routines/%s", routineID)
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get routine: %s", resp.Status)
-	}
-
-	var routine Routine
-	err = json.NewDecoder(resp.Body).Decode(&routine)
-	if err != nil {
-		return nil, err
-	}
-
-	return &routine, nil
+	err = c.request(ctx, http.MethodGet, path, nil, &res)
+	return
 }
 
 // CreateRoutine creates a new routine
-func (c *Client) CreateRoutine(routine Routine) (*Routine, error) {
-	url := fmt.Sprintf("%s/routines", c.baseURL)
-	
-	body, err := json.Marshal(routine)
-	if err != nil {
-		return nil, err
-	}
-	
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to create routine: %s", resp.Status)
-	}
-
-	var result Routine
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+func (c *Client) CreateRoutine(ctx context.Context, routine Routine) (res *Routine, err error) {
+	err = c.request(ctx, http.MethodPost, "/routines", routine, &res)
+	return
 }
 
 // UpdateRoutine updates an existing routine
-func (c *Client) UpdateRoutine(routineID string, routine Routine) (*Routine, error) {
-	url := fmt.Sprintf("%s/routines/%s", c.baseURL, routineID)
-	
-	body, err := json.Marshal(routine)
-	if err != nil {
-		return nil, err
-	}
-	
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (c *Client) UpdateRoutine(ctx context.Context, routineID string, routine Routine) (res *Routine, err error) {
+	path := fmt.Sprintf("/routines/%s", routineID)
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to update routine: %s", resp.Status)
-	}
-
-	var result Routine
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+	err = c.request(ctx, http.MethodPut, path, routine, &res)
+	return
 }
-

@@ -1,108 +1,35 @@
 package hevy
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 // GetRoutineFolders retrieves a paginated list of routine folders
-func (c *Client) GetRoutineFolders(params PaginationParams) (*PaginatedRoutineFoldersResponse, error) {
-	url := fmt.Sprintf("%s/routine_folders?page=%d&pageSize=%d", c.baseURL, params.Page, params.PageSize)
-	
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (c *Client) GetRoutineFolders(ctx context.Context, params PaginationParams) (res *PaginatedRoutineFoldersResponse, err error) {
+	urlParams := url.Values{}
+	urlParams.Add("page", strconv.Itoa(params.Page))
+	urlParams.Add("pageSize", strconv.Itoa(params.PageSize))
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get routine folders: %s", resp.Status)
-	}
+	path := fmt.Sprintf("/routine_folders?%s", urlParams.Encode())
 
-	var result PaginatedRoutineFoldersResponse
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+	err = c.request(ctx, http.MethodGet, path, nil, &res)
+	return
 }
 
 // GetRoutineFolder retrieves a single routine folder by ID
-func (c *Client) GetRoutineFolder(folderID int) (*RoutineFolder, error) {
-	url := fmt.Sprintf("%s/routine_folders/%d", c.baseURL, folderID)
-	
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (c *Client) GetRoutineFolder(ctx context.Context, folderID int) (res *RoutineFolder, err error) {
+	path := fmt.Sprintf("/routine_folders/%d", folderID)
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get routine folder: %s", resp.Status)
-	}
-
-	var folder RoutineFolder
-	err = json.NewDecoder(resp.Body).Decode(&folder)
-	if err != nil {
-		return nil, err
-	}
-
-	return &folder, nil
+	err = c.request(ctx, http.MethodGet, path, nil, &res)
+	return
 }
 
 // CreateRoutineFolder creates a new routine folder
-func (c *Client) CreateRoutineFolder(folder RoutineFolder) (*RoutineFolder, error) {
-	url := fmt.Sprintf("%s/routine_folders", c.baseURL)
-	
-	body, err := json.Marshal(folder)
-	if err != nil {
-		return nil, err
-	}
-	
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	
-	req.Header.Set("api-key", c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to create routine folder: %s", resp.Status)
-	}
-
-	var result RoutineFolder
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+func (c *Client) CreateRoutineFolder(ctx context.Context, folder RoutineFolder) (res *RoutineFolder, err error) {
+	err = c.request(ctx, http.MethodPost, "/routine_folders", folder, &res)
+	return
 }
-
