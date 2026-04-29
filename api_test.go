@@ -32,6 +32,24 @@ func TestPostRoutineFolderRequestBody_JSON(t *testing.T) {
 	}
 }
 
+func TestPostRoutineFolderResponse_JSON(t *testing.T) {
+	raw := `{"routine_folder":{"id":42,"title":"New","index":0,"updated_at":"2024-01-01T00:00:00Z","created_at":"2024-01-01T00:00:00Z"}}`
+	var got postRoutineFolderResponse
+	if err := json.Unmarshal([]byte(raw), &got); err != nil {
+		t.Fatal(err)
+	}
+	want := RoutineFolder{
+		ID:        42,
+		Title:     "New",
+		Index:     0,
+		UpdatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+		CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+	if !reflect.DeepEqual(got.RoutineFolder, want) {
+		t.Fatalf("got %+v want %+v", got.RoutineFolder, want)
+	}
+}
+
 func TestWorkoutToPostBody_JSON(t *testing.T) {
 	start := time.Date(2024, 8, 14, 12, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 8, 14, 12, 30, 0, 0, time.UTC)

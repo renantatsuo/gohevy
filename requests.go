@@ -7,6 +7,12 @@ type PostRoutineFolderRequestBody struct {
 	} `json:"routine_folder"`
 }
 
+// postRoutineFolderResponse matches the successful POST /v1/routine_folders response body.
+// The API returns { "routine_folder": { ... } }, not a bare RoutineFolder (some OpenAPI specs describe the latter).
+type postRoutineFolderResponse struct {
+	RoutineFolder RoutineFolder `json:"routine_folder"`
+}
+
 // PostWorkoutsRequestBody matches POST/PUT workout request bodies (OpenAPI PostWorkoutsRequestBody).
 type PostWorkoutsRequestBody struct {
 	Workout PostWorkoutPayload `json:"workout"`

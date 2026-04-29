@@ -32,10 +32,13 @@ func (c *Client) GetRoutineFolder(ctx context.Context, folderID int) (res *Routi
 	return
 }
 
-// CreateRoutineFolder creates a new routine folder and returns the server-assigned record (OpenAPI PostRoutineFolderRequestBody).
+// CreateRoutineFolder creates a new routine folder and returns the server-assigned record.
 func (c *Client) CreateRoutineFolder(ctx context.Context, title string) (res *RoutineFolder, err error) {
 	body := PostRoutineFolderRequestBody{}
 	body.RoutineFolder.Title = title
-	err = c.request(ctx, http.MethodPost, "/routine_folders", body, &res)
-	return
+	var apiRes postRoutineFolderResponse
+	if err = c.request(ctx, http.MethodPost, "/routine_folders", body, &apiRes); err != nil {
+		return nil, err
+	}
+	return &apiRes.RoutineFolder, nil
 }
