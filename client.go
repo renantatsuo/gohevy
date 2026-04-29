@@ -150,8 +150,12 @@ func (c *Client) request(ctx context.Context, method, path string, body, result 
 		if len(bytes.TrimSpace(bodyBytes)) == 0 {
 			return nil
 		}
+		if out, ok := result.(*string); ok {
+			*out = string(bytes.Trim(bytes.TrimSpace(bodyBytes), `"`))
+			return nil
+		}
 		if err := json.Unmarshal(bodyBytes, result); err != nil {
-			return fmt.Errorf("failed to decode response: %w", err)
+			return fmt.Errorf("failed to decode %s %s response: %w; body: %s", method, req.URL.String(), err, string(bodyBytes))
 		}
 	}
 

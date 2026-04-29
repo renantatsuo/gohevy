@@ -40,8 +40,12 @@ func (c *Client) GetRoutine(ctx context.Context, routineID string) (res *Routine
 // Populate Exercises and their RoutineSets with target values. The ID field of the input is ignored.
 func (c *Client) CreateRoutine(ctx context.Context, routine Routine) (res *Routine, err error) {
 	body := routineToPostBody(routine)
-	err = c.request(ctx, http.MethodPost, "/routines", body, &res)
-	return
+	var wrapped routineAPIResponse
+	err = c.request(ctx, http.MethodPost, "/routines", body, &wrapped)
+	if err != nil {
+		return nil, err
+	}
+	return &wrapped.Routine, nil
 }
 
 // UpdateRoutine replaces the routine identified by routineID with the provided data (OpenAPI PutRoutinesRequestBody).
@@ -50,6 +54,10 @@ func (c *Client) CreateRoutine(ctx context.Context, routine Routine) (res *Routi
 func (c *Client) UpdateRoutine(ctx context.Context, routineID string, routine Routine) (res *Routine, err error) {
 	path := fmt.Sprintf("/routines/%s", routineID)
 	body := routineToPutBody(routine)
-	err = c.request(ctx, http.MethodPut, path, body, &res)
-	return
+	var wrapped routineAPIResponse
+	err = c.request(ctx, http.MethodPut, path, body, &wrapped)
+	if err != nil {
+		return nil, err
+	}
+	return &wrapped.Routine, nil
 }

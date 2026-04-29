@@ -1,5 +1,7 @@
 package hevy
 
+import "encoding/json"
+
 // PostRoutineFolderRequestBody matches POST /v1/routine_folders (OpenAPI PostRoutineFolderRequestBody).
 type PostRoutineFolderRequestBody struct {
 	RoutineFolder struct {
@@ -126,9 +128,56 @@ type CreateCustomExerciseInner struct {
 	OtherMuscles      []string `json:"other_muscles,omitempty"`
 }
 
-// createExerciseTemplateAPIResponse matches POST /v1/exercise_templates 200 body per OpenAPI.
-type createExerciseTemplateAPIResponse struct {
-	ID int64 `json:"id"`
+type routineAPIResponse struct {
+	Routine Routine `json:"routine"`
+}
+
+func (r *routineAPIResponse) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Routine json.RawMessage `json:"routine"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	if len(raw.Routine) == 0 {
+		return nil
+	}
+
+	var routines []Routine
+	if err := json.Unmarshal(raw.Routine, &routines); err == nil {
+		if len(routines) > 0 {
+			r.Routine = routines[0]
+		}
+		return nil
+	}
+
+	return json.Unmarshal(raw.Routine, &r.Routine)
+}
+
+type workoutAPIResponse struct {
+	Workout Workout `json:"workout"`
+}
+
+func (w *workoutAPIResponse) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Workout json.RawMessage `json:"workout"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	if len(raw.Workout) == 0 {
+		return nil
+	}
+
+	var workouts []Workout
+	if err := json.Unmarshal(raw.Workout, &workouts); err == nil {
+		if len(workouts) > 0 {
+			w.Workout = workouts[0]
+		}
+		return nil
+	}
+
+	return json.Unmarshal(raw.Workout, &w.Workout)
 }
 
 // getRoutineResponse wraps GET /v1/routines/{id}.

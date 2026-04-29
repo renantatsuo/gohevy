@@ -1,8 +1,12 @@
 package hevy
 
 import (
+	"context"
 	"encoding/json"
+	"io"
+	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -169,6 +173,147 @@ func TestNewCreateCustomExerciseRequest_JSON(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("got %+v want %+v", got, want)
+	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func jsonResponse(body string) *http.Response {
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Body:       io.NopCloser(strings.NewReader(body)),
+	}
+}
+
+func TestRequestDecodeErrorIncludesResponseBody(t *testing.T) {
+	c := NewClient("test", WithHTTPClient(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(`{"id":false123}`), nil
+	})))
+
+	var dst struct {
+		ID int64 `json:"id"`
+	}
+	err := c.request(context.Background(), http.MethodPost, "/exercise_templates", nil, &dst)
+	if err == nil {
+		t.Fatal("expected decode error")
+	}
+
+	got := err.Error()
+	for _, want := range []string{
+		"failed to decode POST https://api.hevyapp.com/v1/exercise_templates response",
+		`body: {"id":false123}`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("error %q does not contain %q", got, want)
+		}
+	}
+}
+
+func TestCreateRoutineDecodesWrappedResponse(t *testing.T) {
+	calls := 0
+	c := NewClient("test", WithHTTPClient(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		calls++
+		if req.Method != http.MethodPost || req.URL.Path != "/v1/routines" {
+			t.Fatalf("got %s %s", req.Method, req.URL.Path)
+		}
+		return jsonResponse(`{"routine":{"id":"routine-1","title":"Created Routine","created_at":"2024-01-01T00:00:00Z","updated_at":"2024-01-01T00:00:00Z","exercises":[]}}`), nil
+	})))
+
+	got, err := c.CreateRoutine(context.Background(), Routine{Title: "Created Routine"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.ID != "routine-1" || got.Title != "Created Routine" {
+		t.Fatalf("got %+v", got)
+	}
+	if calls != 1 {
+		t.Fatalf("got %d calls, want 1", calls)
+	}
+}
+
+func TestCreateRoutineDecodesWrappedArrayResponse(t *testing.T) {
+	c := NewClient("test", WithHTTPClient(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(`{"routine":[{"id":"routine-1","title":"Created Routine","created_at":"2024-01-01T00:00:00Z","updated_at":"2024-01-01T00:00:00Z","exercises":[]}]}`), nil
+	})))
+
+	got, err := c.CreateRoutine(context.Background(), Routine{Title: "Created Routine"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.ID != "routine-1" || got.Title != "Created Routine" {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestCreateWorkoutDecodesWrappedResponse(t *testing.T) {
+	c := NewClient("test", WithHTTPClient(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Method != http.MethodPost || req.URL.Path != "/v1/workouts" {
+			t.Fatalf("got %s %s", req.Method, req.URL.Path)
+		}
+		return jsonResponse(`{"workout":{"id":"workout-1","title":"Created Workout","start_time":"2024-01-01T00:00:00Z","end_time":"2024-01-01T01:00:00Z","created_at":"2024-01-01T00:00:00Z","updated_at":"2024-01-01T00:00:00Z","exercises":[]}}`), nil
+	})))
+
+	got, err := c.CreateWorkout(context.Background(), Workout{Title: "Created Workout"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.ID != "workout-1" || got.Title != "Created Workout" {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestCreateWorkoutDecodesWrappedArrayResponse(t *testing.T) {
+	c := NewClient("test", WithHTTPClient(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(`{"workout":[{"id":"workout-1","title":"Created Workout","start_time":"2024-01-01T00:00:00Z","end_time":"2024-01-01T01:00:00Z","created_at":"2024-01-01T00:00:00Z","updated_at":"2024-01-01T00:00:00Z","exercises":[]}]}`), nil
+	})))
+
+	got, err := c.CreateWorkout(context.Background(), Workout{Title: "Created Workout"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.ID != "workout-1" || got.Title != "Created Workout" {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestCreateExerciseTemplateDecodesPlainIDResponse(t *testing.T) {
+	calls := 0
+	c := NewClient("test", WithHTTPClient(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		calls++
+		switch calls {
+		case 1:
+			if req.Method != http.MethodPost || req.URL.Path != "/v1/exercise_templates" {
+				t.Fatalf("got %s %s", req.Method, req.URL.Path)
+			}
+			return jsonResponse(`84740179-cfea-4e8f-a588-8f6e0a0b25d2`), nil
+		case 2:
+			if req.Method != http.MethodGet || req.URL.Path != "/v1/exercise_templates/84740179-cfea-4e8f-a588-8f6e0a0b25d2" {
+				t.Fatalf("got %s %s", req.Method, req.URL.Path)
+			}
+			return jsonResponse(`{"id":"84740179-cfea-4e8f-a588-8f6e0a0b25d2","title":"Created Exercise","type":"weight_reps"}`), nil
+		default:
+			t.Fatalf("unexpected request %d: %s %s", calls, req.Method, req.URL.Path)
+			return nil, nil
+		}
+	})))
+
+	got, err := c.CreateExerciseTemplate(context.Background(), NewCreateCustomExerciseRequest(
+		"Created Exercise",
+		"weight_reps",
+		"barbell",
+		"chest",
+		nil,
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.ID != "84740179-cfea-4e8f-a588-8f6e0a0b25d2" {
+		t.Fatalf("got %+v", got)
 	}
 }
 

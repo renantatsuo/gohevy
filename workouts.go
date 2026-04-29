@@ -37,8 +37,12 @@ func (c *Client) GetWorkout(ctx context.Context, workoutID string) (res *Workout
 // Populate Exercises and their Sets to record performance data. Set Workout.IsPrivate for the POST body.
 func (c *Client) CreateWorkout(ctx context.Context, workout Workout) (res *Workout, err error) {
 	body := workoutToPostBody(workout)
-	err = c.request(ctx, http.MethodPost, "/workouts", body, &res)
-	return
+	var wrapped workoutAPIResponse
+	err = c.request(ctx, http.MethodPost, "/workouts", body, &wrapped)
+	if err != nil {
+		return nil, err
+	}
+	return &wrapped.Workout, nil
 }
 
 // UpdateWorkout replaces the workout identified by workoutID with the provided data (OpenAPI PostWorkoutsRequestBody).
@@ -46,8 +50,12 @@ func (c *Client) CreateWorkout(ctx context.Context, workout Workout) (res *Worko
 func (c *Client) UpdateWorkout(ctx context.Context, workoutID string, workout Workout) (res *Workout, err error) {
 	path := fmt.Sprintf("/workouts/%s", workoutID)
 	body := workoutToPostBody(workout)
-	err = c.request(ctx, http.MethodPut, path, body, &res)
-	return
+	var wrapped workoutAPIResponse
+	err = c.request(ctx, http.MethodPut, path, body, &wrapped)
+	if err != nil {
+		return nil, err
+	}
+	return &wrapped.Workout, nil
 }
 
 // GetWorkoutsCount returns the total number of workouts logged on the authenticated account.

@@ -33,14 +33,13 @@ func (c *Client) GetExerciseTemplate(ctx context.Context, templateID string) (re
 }
 
 // CreateExerciseTemplate creates a custom exercise template (OpenAPI CreateCustomExerciseRequestBody).
-// It POSTs the request then loads the template via GET using the returned numeric id.
+// It POSTs the request then loads the template via GET using the returned id.
 func (c *Client) CreateExerciseTemplate(ctx context.Context, req CreateCustomExerciseRequestBody) (res *ExerciseTemplate, err error) {
-	var raw createExerciseTemplateAPIResponse
-	err = c.request(ctx, http.MethodPost, "/exercise_templates", req, &raw)
+	var id string
+	err = c.request(ctx, http.MethodPost, "/exercise_templates", req, &id)
 	if err != nil {
 		return nil, err
 	}
-	idStr := FormatExerciseTemplateIDFromCreateResponse(raw.ID)
-	res, err = c.GetExerciseTemplate(ctx, idStr)
+	res, err = c.GetExerciseTemplate(ctx, id)
 	return
 }
