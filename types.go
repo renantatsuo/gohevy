@@ -6,13 +6,13 @@ import "time"
 // Unlike Workout, a Routine records intent — not actual performance.
 // Use CreateWorkout with RoutineID set to log a workout based on a routine.
 type Routine struct {
-	ID        string            `json:"id"`              // Unique routine identifier assigned by Hevy
-	Title     string            `json:"title"`           // Display name of the routine
-	FolderID  int               `json:"folder_id"`       // ID of the RoutineFolder containing this routine; 0 if not in a folder
-	Notes     string            `json:"notes,omitempty"` // Routine-level notes (used when creating/updating via API)
-	UpdatedAt time.Time         `json:"updated_at"`      // Last modification timestamp (UTC)
-	CreatedAt time.Time         `json:"created_at"`      // Creation timestamp (UTC)
-	Exercises []RoutineExercise `json:"exercises"`       // Ordered list of exercises prescribed by this routine
+	ID        string            `json:"id"`                  // Unique routine identifier assigned by Hevy
+	Title     string            `json:"title"`               // Display name of the routine
+	FolderID  *int              `json:"folder_id,omitempty"` // Routine folder ID; nil encodes as null on POST (default My Routines folder)
+	Notes     string            `json:"notes,omitempty"`     // Routine-level notes (used when creating/updating via API)
+	UpdatedAt time.Time         `json:"updated_at"`          // Last modification timestamp (UTC)
+	CreatedAt time.Time         `json:"created_at"`          // Creation timestamp (UTC)
+	Exercises []RoutineExercise `json:"exercises"`           // Ordered list of exercises prescribed by this routine
 }
 
 // RoutineExercise represents a prescribed exercise within a Routine.
@@ -159,10 +159,12 @@ type PaginatedWorkoutEvents struct {
 // to identify what movement is being performed and how it is measured.
 // Hevy provides built-in templates; users can also create custom ones via CreateExerciseTemplate.
 type ExerciseTemplate struct {
-	ID    string `json:"id"`    // Unique exercise template identifier
-	Title string `json:"title"` // Display name of the exercise (e.g. "Barbell Back Squat")
-	// Type is the measurement type (GET responses / listing). CreateCustomExercise uses exercise_type on POST (see CreateCustomExerciseInner).
-	Type string `json:"type"`
+	ID                    string   `json:"id"`    // Unique exercise template identifier
+	Title                 string   `json:"title"` // Display name of the exercise (e.g. "Barbell Back Squat")
+	Type                  string   `json:"type"`  // Measurement type (e.g. weight_reps); POST uses exercise_type (see CreateCustomExerciseInner)
+	PrimaryMuscleGroup    string   `json:"primary_muscle_group,omitempty"`
+	SecondaryMuscleGroups []string `json:"secondary_muscle_groups,omitempty"`
+	IsCustom              bool     `json:"is_custom"`
 }
 
 // RoutineFolder is an organizational container for grouping related Routines.
@@ -172,17 +174,6 @@ type RoutineFolder struct {
 	Index     int       `json:"index"`      // Display order position of this folder in the folder list (assumed 0-based, consistent with Exercise.Index and Set.Index)
 	UpdatedAt time.Time `json:"updated_at"` // Last modification timestamp (UTC)
 	CreatedAt time.Time `json:"created_at"` // Creation timestamp (UTC)
-}
-
-// WebhookSubscription represents an active webhook endpoint registered to receive Hevy events.
-// Only one webhook subscription is allowed per API key.
-// When a subscribed event occurs, Hevy sends an HTTP POST request to URL.
-type WebhookSubscription struct {
-	ID        string    `json:"id"`         // Unique subscription identifier assigned by Hevy
-	URL       string    `json:"url"`        // HTTPS endpoint that receives webhook event payloads
-	Events    []string  `json:"events"`     // Event types to receive (e.g. "workout.created", "workout.updated", "workout.deleted")
-	CreatedAt time.Time `json:"created_at"` // Subscription creation timestamp (UTC)
-	UpdatedAt time.Time `json:"updated_at"` // Last modification timestamp (UTC)
 }
 
 // ExerciseHistoryEntry is one row from GET /v1/exercise_history/{exerciseTemplateId} (OpenAPI ExerciseHistoryEntry).

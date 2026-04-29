@@ -83,11 +83,11 @@ func TestWorkoutToPostBody_JSON(t *testing.T) {
 
 	want := map[string]any{
 		"workout": map[string]any{
-			"title":        "Leg Day",
-			"description":  "Focus quads",
-			"start_time":   "2024-08-14T12:00:00Z",
-			"end_time":     "2024-08-14T12:30:00Z",
-			"is_private":   false,
+			"title":       "Leg Day",
+			"description": "Focus quads",
+			"start_time":  "2024-08-14T12:00:00Z",
+			"end_time":    "2024-08-14T12:30:00Z",
+			"is_private":  false,
 			"exercises": []any{
 				map[string]any{
 					"exercise_template_id": "D04AC939",
@@ -114,9 +114,8 @@ func TestWorkoutToPostBody_JSON(t *testing.T) {
 
 func TestRoutineToPostBody_JSON_folder_id_null(t *testing.T) {
 	r := Routine{
-		Title:  "April Leg Day",
-		Notes:  "stretch",
-		FolderID: 0,
+		Title: "April Leg Day",
+		Notes: "stretch",
 		Exercises: []RoutineExercise{
 			{
 				ExerciseTemplateID: "D04AC939",
@@ -136,9 +135,9 @@ func TestRoutineToPostBody_JSON_folder_id_null(t *testing.T) {
 			"rest_seconds":         float64(90),
 			"sets": []any{
 				map[string]any{
-					"type":       "normal",
-					"weight_kg":  float64(100),
-					"reps":       float64(10),
+					"type":      "normal",
+					"weight_kg": float64(100),
+					"reps":      float64(10),
 				},
 			},
 		},
@@ -161,11 +160,11 @@ func TestNewCreateCustomExerciseRequest_JSON(t *testing.T) {
 	got := mustMarshalNormalize(t, req)
 	want := map[string]any{
 		"exercise": map[string]any{
-			"title":               "Bench Press",
-			"exercise_type":       "weight_reps",
-			"equipment_category":  "barbell",
-			"muscle_group":        "chest",
-			"other_muscles":       []any{"triceps"},
+			"title":              "Bench Press",
+			"exercise_type":      "weight_reps",
+			"equipment_category": "barbell",
+			"muscle_group":       "chest",
+			"other_muscles":      []any{"triceps"},
 		},
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -173,5 +172,5 @@ func TestNewCreateCustomExerciseRequest_JSON(t *testing.T) {
 	}
 }
 
-func ptrFloat(f float64) *float64   { return &f }
-func ptrInt(i int) *int             { return &i }
+func ptrFloat(f float64) *float64 { return &f }
+func ptrInt(i int) *int           { return &i }

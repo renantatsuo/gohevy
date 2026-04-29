@@ -7,8 +7,8 @@ type PostRoutineFolderRequestBody struct {
 	} `json:"routine_folder"`
 }
 
-// postRoutineFolderResponse matches the successful POST /v1/routine_folders response body.
-// The API returns { "routine_folder": { ... } }, not a bare RoutineFolder (some OpenAPI specs describe the latter).
+// postRoutineFolderResponse matches POST /v1/routine_folders 201: API returns { "routine_folder": { ... } };
+// the published OpenAPI describes a bare RoutineFolder, but the live response is wrapped.
 type postRoutineFolderResponse struct {
 	RoutineFolder RoutineFolder `json:"routine_folder"`
 }
@@ -78,7 +78,6 @@ type PostRoutinesRequestSet struct {
 	DurationSeconds *int      `json:"duration_seconds,omitempty"`
 	CustomMetric    *float64  `json:"custom_metric,omitempty"`
 	RepRange        *RepRange `json:"rep_range,omitempty"`
-	RPE             *float64  `json:"rpe,omitempty"`
 }
 
 // PutRoutinesRequestBody matches PUT /v1/routines/{id} (OpenAPI PutRoutinesRequestBody; no folder_id).
@@ -111,7 +110,6 @@ type PutRoutinesRequestSet struct {
 	DurationSeconds *int      `json:"duration_seconds,omitempty"`
 	CustomMetric    *float64  `json:"custom_metric,omitempty"`
 	RepRange        *RepRange `json:"rep_range,omitempty"`
-	RPE             *float64  `json:"rpe,omitempty"`
 }
 
 // CreateCustomExerciseRequestBody matches POST /v1/exercise_templates (OpenAPI CreateCustomExerciseRequestBody).

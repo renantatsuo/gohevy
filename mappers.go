@@ -74,8 +74,8 @@ func workoutSetToPost(s Set) PostWorkoutsRequestSet {
 
 func routineToPostBody(r Routine) PostRoutinesRequestBody {
 	var folderID *int
-	if r.FolderID != 0 {
-		v := r.FolderID
+	if r.FolderID != nil && *r.FolderID != 0 {
+		v := *r.FolderID
 		folderID = &v
 	}
 	out := PostRoutinesRequestBody{
@@ -125,7 +125,6 @@ func routineSetToPost(s RoutineSet) PostRoutinesRequestSet {
 		RepRange:        s.RepRange,
 		DurationSeconds: s.DurationSeconds,
 		CustomMetric:    s.CustomMetric,
-		RPE:             s.RPE,
 	}
 	if s.DistanceMeters != nil {
 		v := int(*s.DistanceMeters)
@@ -186,7 +185,6 @@ func routineSetToPut(s RoutineSet) PutRoutinesRequestSet {
 		RepRange:        s.RepRange,
 		DurationSeconds: s.DurationSeconds,
 		CustomMetric:    s.CustomMetric,
-		RPE:             s.RPE,
 	}
 	if s.DistanceMeters != nil {
 		v := int(*s.DistanceMeters)
