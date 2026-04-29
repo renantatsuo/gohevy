@@ -32,9 +32,10 @@ func (c *Client) GetRoutineFolder(ctx context.Context, folderID int) (res *Routi
 	return
 }
 
-// CreateRoutineFolder creates a new routine folder and returns the server-assigned record.
-// Use folders to organize related routines. The ID field of the input is ignored; the server assigns a new ID.
-func (c *Client) CreateRoutineFolder(ctx context.Context, folder RoutineFolder) (res *RoutineFolder, err error) {
-	err = c.request(ctx, http.MethodPost, "/routine_folders", folder, &res)
+// CreateRoutineFolder creates a new routine folder and returns the server-assigned record (OpenAPI PostRoutineFolderRequestBody).
+func (c *Client) CreateRoutineFolder(ctx context.Context, title string) (res *RoutineFolder, err error) {
+	body := PostRoutineFolderRequestBody{}
+	body.RoutineFolder.Title = title
+	err = c.request(ctx, http.MethodPost, "/routine_folders", body, &res)
 	return
 }

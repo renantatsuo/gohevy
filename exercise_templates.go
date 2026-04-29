@@ -32,10 +32,15 @@ func (c *Client) GetExerciseTemplate(ctx context.Context, templateID string) (re
 	return
 }
 
-// CreateExerciseTemplate creates a new custom exercise template and returns the server-assigned record.
-// Use this to define exercises not available in Hevy's built-in template library.
-// The ID field of the input is ignored; the server assigns a new ID.
-func (c *Client) CreateExerciseTemplate(ctx context.Context, template ExerciseTemplate) (res *ExerciseTemplate, err error) {
-	err = c.request(ctx, http.MethodPost, "/exercise_templates", template, &res)
+// CreateExerciseTemplate creates a custom exercise template (OpenAPI CreateCustomExerciseRequestBody).
+// It POSTs the request then loads the template via GET using the returned numeric id.
+func (c *Client) CreateExerciseTemplate(ctx context.Context, req CreateCustomExerciseRequestBody) (res *ExerciseTemplate, err error) {
+	var raw createExerciseTemplateAPIResponse
+	err = c.request(ctx, http.MethodPost, "/exercise_templates", req, &raw)
+	if err != nil {
+		return nil, err
+	}
+	idStr := FormatExerciseTemplateIDFromCreateResponse(raw.ID)
+	res, err = c.GetExerciseTemplate(ctx, idStr)
 	return
 }

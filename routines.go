@@ -28,23 +28,28 @@ func (c *Client) GetRoutines(ctx context.Context, params PaginationParams) (res 
 func (c *Client) GetRoutine(ctx context.Context, routineID string) (res *Routine, err error) {
 	path := fmt.Sprintf("/routines/%s", routineID)
 
-	err = c.request(ctx, http.MethodGet, path, nil, &res)
-	return
+	var wrapped getRoutineResponse
+	err = c.request(ctx, http.MethodGet, path, nil, &wrapped)
+	if err != nil {
+		return nil, err
+	}
+	return &wrapped.Routine, nil
 }
 
 // CreateRoutine creates a new routine and returns the server-assigned record (including ID and timestamps).
 // Populate Exercises and their RoutineSets with target values. The ID field of the input is ignored.
 func (c *Client) CreateRoutine(ctx context.Context, routine Routine) (res *Routine, err error) {
-	err = c.request(ctx, http.MethodPost, "/routines", routine, &res)
+	body := routineToPostBody(routine)
+	err = c.request(ctx, http.MethodPost, "/routines", body, &res)
 	return
 }
 
-// UpdateRoutine replaces the routine identified by routineID with the provided data.
-// This is a full replacement (PUT), not a partial update — all exercises and sets must be included.
+// UpdateRoutine replaces the routine identified by routineID with the provided data (OpenAPI PutRoutinesRequestBody).
+// PUT does not include folder_id per spec; folder moves may require other APIs.
 // Returns *APIError with StatusCode 404 if no routine with the given ID exists.
 func (c *Client) UpdateRoutine(ctx context.Context, routineID string, routine Routine) (res *Routine, err error) {
 	path := fmt.Sprintf("/routines/%s", routineID)
-
-	err = c.request(ctx, http.MethodPut, path, routine, &res)
+	body := routineToPutBody(routine)
+	err = c.request(ctx, http.MethodPut, path, body, &res)
 	return
 }

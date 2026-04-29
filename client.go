@@ -143,7 +143,14 @@ func (c *Client) request(ctx context.Context, method, path string, body, result 
 	}
 
 	if result != nil {
-		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response: %w", err)
+		}
+		if len(bytes.TrimSpace(bodyBytes)) == 0 {
+			return nil
+		}
+		if err := json.Unmarshal(bodyBytes, result); err != nil {
 			return fmt.Errorf("failed to decode response: %w", err)
 		}
 	}

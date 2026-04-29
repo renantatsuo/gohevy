@@ -4,15 +4,29 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"time"
 )
 
-// GetExerciseHistory retrieves all recorded sets for the exercise identified by exerciseTemplateID,
-// grouped by workout. Returns a flat slice of ExerciseHistoryEntry (not a paginated response).
-// Use this to review an athlete's progression over time for a given exercise.
-// Returns *APIError with StatusCode 404 if no exercise template with the given ID exists.
-func (c *Client) GetExerciseHistory(ctx context.Context, exerciseTemplateID string) (res []ExerciseHistoryEntry, err error) {
+// GetExerciseHistory retrieves exercise history rows for exerciseTemplateID (OpenAPI exercise_history list).
+// Pass nil params if no date filters are needed.
+func (c *Client) GetExerciseHistory(ctx context.Context, exerciseTemplateID string, params *ExerciseHistoryParams) (res []ExerciseHistoryEntry, err error) {
 	path := fmt.Sprintf("/exercise_history/%s", exerciseTemplateID)
+	if params != nil && (params.StartDate != nil || params.EndDate != nil) {
+		q := url.Values{}
+		if params.StartDate != nil {
+			q.Set("start_date", params.StartDate.UTC().Format(time.RFC3339))
+		}
+		if params.EndDate != nil {
+			q.Set("end_date", params.EndDate.UTC().Format(time.RFC3339))
+		}
+		path += "?" + q.Encode()
+	}
 
-	err = c.request(ctx, http.MethodGet, path, nil, &res)
-	return
+	var wrapped exerciseHistoryAPIResponse
+	err = c.request(ctx, http.MethodGet, path, nil, &wrapped)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped.ExerciseHistory, nil
 }
